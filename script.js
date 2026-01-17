@@ -418,11 +418,14 @@ submitRoundBtn.addEventListener('click', () => {
     gameState.players.forEach((player, index) => {
         player.totalScore += scores[index];
         
-        if (completions[index] && player.phase < 10) {
-            player.phase++;
+        if (completions[index]) {
+            if (player.phase < 11) {
+                player.phase++;
+            }
         }
         
-        if (player.phase === 10 && completions[index]) {
+        // Player wins if they complete phase 10 (phase becomes 11)
+        if (player.phase === 11 && completions[index]) {
             player.completedPhase10 = true;
         }
     });
