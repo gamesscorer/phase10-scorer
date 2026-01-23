@@ -16,7 +16,8 @@ const PHASES = [
 let gameState = {
     players: [],
     currentRound: 1,
-    gameStarted: false
+    gameStarted: false,
+    gameLog: []
 };
 
 // LocalStorage key
@@ -117,28 +118,38 @@ const roundInputs = document.getElementById('round-inputs');
 const submitRoundBtn = document.getElementById('submit-round-btn');
 const cancelRoundBtn = document.getElementById('cancel-round-btn');
 const modalRoundSpan = document.getElementById('modal-round');
+const modalTitle = document.getElementById('modal-title');
 const winnerScreen = document.getElementById('winner-screen');
 const winnerName = document.getElementById('winner-name');
 const winnerDetails = document.getElementById('winner-details');
+const winnerLeaderboardItems = document.getElementById('winner-leaderboard-items');
 const newGameBtn = document.getElementById('new-game-btn');
 const homeTab = document.getElementById('home-tab');
 const leaderboardTab = document.getElementById('leaderboard-tab');
+const gameLogTab = document.getElementById('game-log-tab');
 const navHome = document.getElementById('nav-home');
 const navLeaderboard = document.getElementById('nav-leaderboard');
+const navGameLog = document.getElementById('nav-game-log');
 const navNewGame = document.getElementById('nav-new-game');
+const gameLogItems = document.getElementById('game-log-items');
 
 // Initialize player inputs
 let playerCount = 2;
+
+// Edit mode: round number when editing a round, null when adding new
+let editingRound = null;
 
 // Tab switching
 function switchTab(tabId) {
     // Hide all tabs
     homeTab.classList.remove('active');
     leaderboardTab.classList.remove('active');
+    gameLogTab.classList.remove('active');
     
     // Remove active class from all nav items
     navHome.classList.remove('active');
     navLeaderboard.classList.remove('active');
+    navGameLog.classList.remove('active');
     
     // Show selected tab
     if (tabId === 'home-tab') {
@@ -147,14 +158,18 @@ function switchTab(tabId) {
     } else if (tabId === 'leaderboard-tab') {
         leaderboardTab.classList.add('active');
         navLeaderboard.classList.add('active');
-        // Update leaderboard when switching to it
         updateLeaderboard();
+    } else if (tabId === 'game-log-tab') {
+        gameLogTab.classList.add('active');
+        navGameLog.classList.add('active');
+        updateGameLog();
     }
 }
 
 // Tab navigation event listeners
 navHome.addEventListener('click', () => switchTab('home-tab'));
 navLeaderboard.addEventListener('click', () => switchTab('leaderboard-tab'));
+navGameLog.addEventListener('click', () => switchTab('game-log-tab'));
 
 // Update leaderboard function
 function updateLeaderboard() {
@@ -188,6 +203,44 @@ function updateLeaderboard() {
             </div>
         `;
         leaderboardItems.appendChild(leaderboardItem);
+    });
+}
+
+// Update game log
+function updateGameLog() {
+    if (!gameLogItems) return;
+    gameLogItems.innerHTML = '';
+    if (!gameState.gameLog || gameState.gameLog.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-muted text-center py-4 mb-0';
+        empty.textContent = 'No rounds recorded yet. Add scores to see the log.';
+        gameLogItems.appendChild(empty);
+        return;
+    }
+    // Show newest first
+    const sorted = [...gameState.gameLog].sort((a, b) => b.round - a.round);
+    sorted.forEach(({ round, entries }) => {
+        const card = document.createElement('div');
+        card.className = 'card game-log-card';
+        const rows = entries.map(e =>
+            `<div class="game-log-row">
+                <span class="game-log-name">${e.name}</span>
+                <span class="game-log-score">${e.score} pts</span>
+                <span class="game-log-phase ${e.completed ? 'phase-done' : ''}">${e.completed ? '✓ Phase' : '—'}</span>
+            </div>`
+        ).join('');
+        card.innerHTML = `
+            <div class="card-body p-3">
+                <div class="game-log-round-row mb-2">
+                    <span class="game-log-round">Round ${round}</span>
+                    <button type="button" class="btn-edit-round" data-round="${round}">Edit</button>
+                </div>
+                <div class="game-log-entries">${rows}</div>
+            </div>
+        `;
+        const editBtn = card.querySelector('.btn-edit-round');
+        if (editBtn) editBtn.addEventListener('click', () => showEditRoundModal(round));
+        gameLogItems.appendChild(card);
     });
 }
 
@@ -360,35 +413,89 @@ navAddScore.addEventListener('click', () => {
     showRoundModal();
 });
 
-// Show round modal
+// Show round modal (add new round)
 function showRoundModal() {
+    editingRound = null;
+    if (modalTitle) modalTitle.textContent = 'Add Record';
     modalRoundSpan.textContent = gameState.currentRound;
+    populateRoundInputs(gameState.players.map((_, i) => ({ score: 0, completed: false })));
+    const modal = bootstrap.Modal.getOrCreateInstance(roundModal);
+    modal.show();
+}
+
+// Show edit round modal (edit existing round from Game Log)
+function showEditRoundModal(round) {
+    const logEntry = (gameState.gameLog || []).find(e => e.round === round);
+    if (!logEntry) return;
+    editingRound = round;
+    if (modalTitle) modalTitle.textContent = `Edit Round ${round}`;
+    modalRoundSpan.textContent = round;
+    const byIndex = gameState.players.map((p, i) => {
+        const e = logEntry.entries[i];
+        return e ? { score: e.score, completed: e.completed } : { score: 0, completed: false };
+    });
+    populateRoundInputs(byIndex);
+    const modal = bootstrap.Modal.getOrCreateInstance(roundModal);
+    modal.show();
+}
+
+// Build round inputs (scores + phase toggles). values = [{ score, completed }, ...]
+function populateRoundInputs(values) {
     roundInputs.innerHTML = '';
-    
     gameState.players.forEach((player, index) => {
+        const v = values[index] || { score: 0, completed: false };
         const inputItem = document.createElement('div');
         inputItem.className = 'score-input-card';
-        
         inputItem.innerHTML = `
             <div class="score-player-name">${player.name}</div>
-            <input type="number" class="score-input" id="score-${index}" min="0" value="0" required>
+            <input type="number" class="score-input" id="score-${index}" min="0" step="5" value="${v.score}" required>
             <div class="score-phase-toggle">
                 <span class="score-phase-label">Phase ?</span>
                 <label class="score-toggle-switch">
-                    <input type="checkbox" id="completed-${index}">
+                    <input type="checkbox" id="completed-${index}" ${v.completed ? 'checked' : ''}>
                     <span class="score-toggle-slider"></span>
                 </label>
             </div>
         `;
-        
         roundInputs.appendChild(inputItem);
+        
+        // Add validation for multiples of 5
+        const scoreInput = document.getElementById(`score-${index}`);
+        if (scoreInput) {
+            scoreInput.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                if (!isNaN(value) && value >= 0 && value % 5 === 0) {
+                    this.style.borderColor = 'var(--border-color)';
+                } else if (!isNaN(value) && value >= 0) {
+                    this.style.borderColor = 'var(--danger-color)';
+                }
+            });
+        }
     });
-    
-    const modal = new bootstrap.Modal(roundModal);
-    modal.show();
 }
 
-// Submit round scores
+// Recalculate all player stats from gameLog (used after editing a round)
+function recalculateStateFromGameLog() {
+    gameState.players.forEach(p => {
+        p.totalScore = 0;
+        p.phase = 1;
+        p.completedPhase10 = false;
+    });
+    const sorted = [...(gameState.gameLog || [])].sort((a, b) => a.round - b.round);
+    sorted.forEach(({ entries }) => {
+        gameState.players.forEach((player, index) => {
+            const e = entries[index];
+            if (!e) return;
+            player.totalScore += e.score;
+            if (e.completed) {
+                if (player.phase < 11) player.phase++;
+            }
+            if (player.phase === 11 && e.completed) player.completedPhase10 = true;
+        });
+    });
+}
+
+// Submit round scores (add new or save edit)
 submitRoundBtn.addEventListener('click', () => {
     let allValid = true;
     const scores = [];
@@ -402,6 +509,9 @@ submitRoundBtn.addEventListener('click', () => {
         if (isNaN(score) || score < 0) {
             allValid = false;
             scoreInput.style.borderColor = 'var(--danger-color)';
+        } else if (score % 5 !== 0) {
+            allValid = false;
+            scoreInput.style.borderColor = 'var(--danger-color)';
         } else {
             scoreInput.style.borderColor = 'var(--border-color)';
             scores.push(score);
@@ -410,42 +520,94 @@ submitRoundBtn.addEventListener('click', () => {
     });
     
     if (!allValid) {
-        showToast('Please enter valid scores (0 or greater)', 'error');
+        showToast('Please enter valid scores (multiples of 5 only)', 'error');
         return;
     }
     
-    // Update player scores and phases
-    gameState.players.forEach((player, index) => {
-        player.totalScore += scores[index];
-        
-        if (completions[index]) {
-            if (player.phase < 11) {
-                player.phase++;
+    const roundLog = {
+        round: editingRound ?? gameState.currentRound,
+        entries: gameState.players.map((p, i) => ({
+            name: p.name,
+            score: scores[i],
+            completed: completions[i]
+        }))
+    };
+    if (!gameState.gameLog) gameState.gameLog = [];
+    
+    if (editingRound !== null) {
+        // Edit: replace existing round entry, then recalc all stats
+        const idx = gameState.gameLog.findIndex(e => e.round === editingRound);
+        if (idx !== -1) gameState.gameLog[idx] = roundLog;
+        recalculateStateFromGameLog();
+        saveGameState();
+        const modal = bootstrap.Modal.getInstance(roundModal);
+        modal.hide();
+        editingRound = null;
+        updateGameDisplay();
+        updateGameLog();
+        if (leaderboardTab.classList.contains('active')) updateLeaderboard();
+        checkWinner();
+    } else {
+        // Add new round
+        gameState.gameLog.push(roundLog);
+        gameState.players.forEach((player, index) => {
+            player.totalScore += scores[index];
+            if (completions[index]) {
+                if (player.phase < 11) player.phase++;
             }
-        }
-        
-        // Player wins if they complete phase 10 (phase becomes 11)
-        if (player.phase === 11 && completions[index]) {
-            player.completedPhase10 = true;
-        }
-    });
-    
-    // Move to next round
-    gameState.currentRound++;
-    
-    saveGameState();
-    
-    const modal = bootstrap.Modal.getInstance(roundModal);
-    modal.hide();
-    updateGameDisplay();
+            if (player.phase === 11 && completions[index]) player.completedPhase10 = true;
+        });
+        gameState.currentRound++;
+        saveGameState();
+        const modal = bootstrap.Modal.getInstance(roundModal);
+        modal.hide();
+        updateGameDisplay();
+    }
 });
 
 // Cancel round modal
 cancelRoundBtn.addEventListener('click', () => {
+    editingRound = null;
     const modal = bootstrap.Modal.getInstance(roundModal);
     modal.hide();
 });
 
+
+// Update winner screen leaderboard
+function updateWinnerLeaderboard() {
+    if (!winnerLeaderboardItems) return;
+    winnerLeaderboardItems.innerHTML = '';
+    if (!gameState.players || gameState.players.length === 0) return;
+    
+    // Sort players by completed phases (highest first), then by score (lowest first)
+    const sortedPlayers = [...gameState.players].sort((a, b) => {
+        const aCompleted = a.phase - 1; // Completed phases = current phase - 1
+        const bCompleted = b.phase - 1;
+        if (bCompleted !== aCompleted) {
+            return bCompleted - aCompleted;
+        }
+        return a.totalScore - b.totalScore;
+    });
+
+    sortedPlayers.forEach((player, index) => {
+        const leaderboardItem = document.createElement('div');
+        leaderboardItem.className = 'winner-leaderboard-item';
+        const completedPhases = player.phase - 1;
+        const progressPercent = (completedPhases / 10) * 100;
+
+        leaderboardItem.innerHTML = `
+            <div class="winner-leaderboard-row">
+                <span class="winner-leaderboard-name">${player.name}</span>
+                <div class="winner-leaderboard-progress">
+                    <div class="winner-progress-bar" style="width: ${progressPercent}%;"></div>
+                </div>
+                <span class="winner-leaderboard-phase">${completedPhases}</span>
+                <span class="winner-leaderboard-score">${player.totalScore}</span>
+            </div>
+        `;
+        winnerLeaderboardItems.appendChild(leaderboardItem);
+    });
+}
 
 // Check for winner
 function checkWinner() {
@@ -466,7 +628,10 @@ function checkWinner() {
             winnerDetails.textContent = `Tied with Phase 10 completed! Score: ${winner.totalScore}`;
         }
         
+        updateWinnerLeaderboard();
         winnerScreen.style.display = 'flex';
+    } else {
+        winnerScreen.style.display = 'none';
     }
 }
 
@@ -476,7 +641,8 @@ function resetGame() {
     gameState = {
         players: [],
         currentRound: 1,
-        gameStarted: false
+        gameStarted: false,
+        gameLog: []
     };
     
     clearGameState();
@@ -519,6 +685,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     if (savedState) {
         gameState = savedState;
+        if (!gameState.gameLog) gameState.gameLog = [];
         
         // Show game screen instead of setup screen
         setupScreen.classList.remove('active');

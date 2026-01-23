@@ -71,11 +71,14 @@
                 <button class="nav-item active" data-tab="home-tab" id="nav-home">
                     <img src="resources/home.svg" alt="Home" class="nav-icon">
                 </button>
+                <button class="nav-item" data-tab="leaderboard-tab" id="nav-leaderboard">
+                    <img src="resources/leaderboard.svg" alt="Leaderboard" class="nav-icon">
+                </button>
                 <button class="nav-item" id="nav-add-score">
                     <img src="resources/add_scores.svg" alt="Add Scores" class="nav-icon">
                 </button>
-                <button class="nav-item" data-tab="leaderboard-tab" id="nav-leaderboard">
-                    <img src="resources/leaderboard.svg" alt="Leaderboard" class="nav-icon">
+                <button class="nav-item" data-tab="game-log-tab" id="nav-game-log">
+                    <img src="resources/log.svg" alt="Game Log" class="nav-icon">
                 </button>
                 <button class="nav-item" id="nav-new-game">
                     <img src="resources/reset_game.svg" alt="Reset Game" class="nav-icon">
@@ -87,6 +90,12 @@
                     <h2>🎉 Winner! 🎉</h2>
                     <p id="winner-name" class="winner-name"></p>
                     <p id="winner-details" class="winner-details"></p>
+                    <div class="winner-leaderboard-section">
+                        <h3 class="winner-leaderboard-title">Final Standings</h3>
+                        <div id="winner-leaderboard-items" class="winner-leaderboard-items">
+                            <!-- Leaderboard items will be dynamically generated -->
+                        </div>
+                    </div>
                     <button id="new-game-btn" class="btn btn-primary">New Game</button>
                 </div>
             </div>
@@ -105,6 +114,19 @@
                 </div>
             </div>
 
+            <!-- Game Log Tab Content -->
+            <div id="game-log-tab" class="tab-content">
+                <div class="game-log-section mb-3">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="game-log-icon">📋</span>
+                        <h3 class="h5 mb-0">Game Log</h3>
+                    </div>
+                    <div id="game-log-items" class="d-flex flex-column gap-2">
+                        <!-- Game log entries will be dynamically generated -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Round End Modal -->
         <div id="round-modal" class="modal fade" tabindex="-1" style="display: none;">
             <div class="modal-dialog modal-dialog-scrollable score-modal-dialog">
@@ -113,7 +135,7 @@
                         <button type="button" class="btn-back" id="cancel-round-btn" aria-label="Close">
                             <span>←</span>
                         </button>
-                        <h5 class="modal-title">Add Record</h5>
+                        <h5 class="modal-title" id="modal-title">Add Record</h5>
                         <div style="width: 40px;"></div>
                     </div>
                     <div class="modal-body score-modal-body">
