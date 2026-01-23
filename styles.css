@@ -95,6 +95,17 @@ body {
     filter: brightness(0) saturate(100%) invert(47%) sepia(91%) saturate(1934%) hue-rotate(230deg) brightness(98%) contrast(90%);
 }
 
+/* Add Scores button - bigger and red */
+#nav-add-score .nav-icon {
+    width: 50px;
+    height: 50px;
+    filter: brightness(0) saturate(100%) invert(15%) sepia(95%) saturate(7471%) hue-rotate(358deg) brightness(95%) contrast(118%);
+}
+
+#nav-add-score:hover .nav-icon {
+    filter: brightness(0) saturate(100%) invert(15%) sepia(95%) saturate(7471%) hue-rotate(358deg) brightness(110%) contrast(118%);
+}
+
 .nav-label {
     font-size: 0.75rem;
     font-weight: 500;
@@ -364,6 +375,95 @@ header {
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+/* Game Log Section */
+.game-log-section {
+    margin-top: 0;
+    margin-bottom: 24px;
+}
+
+.game-log-icon {
+    font-size: 1.25rem;
+}
+
+.game-log-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+}
+
+.game-log-round-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.game-log-round {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.btn-edit-round {
+    padding: 6px 14px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-edit-round:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.game-log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.game-log-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    font-size: 0.95rem;
+}
+
+.game-log-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+}
+
+.game-log-score {
+    flex: 1;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.game-log-phase {
+    min-width: 70px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.game-log-phase.phase-done {
+    color: #3b82f6;
 }
 
 /* Progress bar styling */
@@ -706,6 +806,77 @@ header {
     font-size: 1.1rem;
     opacity: 0.9;
     margin-bottom: 24px;
+}
+
+.winner-leaderboard-section {
+    margin: 24px 0;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.winner-leaderboard-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: white;
+}
+
+.winner-leaderboard-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.winner-leaderboard-item {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    backdrop-filter: blur(10px);
+}
+
+.winner-leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+
+.winner-leaderboard-name {
+    min-width: 80px;
+    font-weight: 600;
+    color: white;
+}
+
+.winner-leaderboard-progress {
+    flex: 1;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.winner-progress-bar {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.winner-leaderboard-phase {
+    min-width: 25px;
+    text-align: right;
+    font-weight: 700;
+    color: white;
+}
+
+.winner-leaderboard-score {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+    color: white;
 }
 
 /* Toast Notification */
